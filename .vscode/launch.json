@@ -5,34 +5,28 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "test convert",
+            "name": "file_class_parser",
             "type": "dart",
             "request": "launch",
-            "program": "test_convert.dart"
+            "program": "lib/src/file_class_parser.dart"
         },
         {
-            "name": "Dart: Run all Tests",
+            "name": "parser",
             "type": "dart",
             "request": "launch",
-            "program": "./test/"
-        },
-        {
-            "name": "V1Test",
-            "type": "dart",
-            "request": "launch",
-            "program": "./v1/sample.dart"
-        },
-        {
-            "name": "Clazz",
-            "type": "dart",
-            "request": "launch",
-            "program": "./v2/test.dart"
+            "program": "lib/class_parser.dart"
         },
         {
             "name": "Dart",
-            "program": "./path_parser.dart",
+            "type": "dart",
             "request": "launch",
-            "type": "dart"
+            "program": "test/class_parser_test.dart"
+        },
+        {
+            "name": "ast",
+            "type": "dart",
+            "request": "launch",
+            "program": "test/syntax_test.dart"
         }
     ]
 }
