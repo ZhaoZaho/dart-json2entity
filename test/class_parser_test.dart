@@ -4,7 +4,6 @@ main(List<String> args) {
   testGetConstructor();
 }
 
-
 var src = '''
 
 class Model extends Object {
@@ -32,7 +31,10 @@ void testGetConstructor() {
   // print(src);
   var classParser =
       // EntityClassParser.fromSource(src.toString(), 'Model');
-      EntityClassParser.fromUri(Uri.parse('/Users/etiantian/.pub-cache/hosted/pub.flutter-io.cn/analyzer-0.34.0/lib/dart/ast/ast.dart'), 'LibraryIdentifier');
+      EntityClassParser.fromUri(
+          Uri.parse(
+              '/Users/etiantian/.pub-cache/hosted/pub.flutter-io.cn/analyzer-0.34.0/lib/dart/ast/ast.dart'),
+          'LibraryIdentifier');
   // NodeList<FormalParameter> param = classParser.getConstructor().parameters.parameters;
   // print(param.toList().elementAt(0).isNamed);
   // print(param);

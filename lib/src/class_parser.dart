@@ -4,14 +4,26 @@ import 'package:analyzer/analyzer.dart';
 
 
 abstract class ClassParser {
-  getConstructor();
+  ConstructorDeclaration getConstructor();
   getFields();
   getMethods();
   getSuper();
+  List<TypeName> getImplements();
 }
 
 class EntityClassParser extends ClassParser {
   ClassDeclaration _clazz;
+
+  ClassDeclaration get clazz => _clazz;
+
+  EntityClassParser.fromClassDeclaration(CompilationUnitMember cls) {
+    _clazz = cls;
+  }
+
+  EntityClassParser.fromUri(Uri uri, String name) {
+    String src = File.fromUri(uri).readAsStringSync();
+    EntityClassParser.fromSource(src, name);
+  }
 
   EntityClassParser.fromSource(String src, String name) {
     CompilationUnit compilationUnit = parseCompilationUnit(src);
@@ -58,22 +70,20 @@ class EntityClassParser extends ClassParser {
     return null;
   }
 
-  getSuperName() {
-    if (getSuper() != null) {
-      return getSuper().name;
+  @override
+  List<TypeName> getImplements() {
+    ImplementsClause ex = _clazz.implementsClause;
+    if (ex != null) {
+      return ex.interfaces;
     }
     return null;
   }
 
-  EntityClassParser.fromClassDeclaration(CompilationUnitMember cls) {
-    _clazz = cls;
-  }
-
-  ClassDeclaration get clazz => _clazz;
-
-  EntityClassParser.fromUri(Uri uri, String name) {
-    String src = File.fromUri(uri).readAsStringSync();
-    EntityClassParser.fromSource(src, name);
+  String getSuperName() {
+    if (getSuper() != null) {
+      return getSuper().name.name;
+    }
+    return null;
   }
 
   String getName() {
