@@ -245,7 +245,10 @@ class TreeBuilderImpl extends TreeBuilder{
 
 
 // Uri srcUri = Uri.parse('/Users/leochou/.pub-cache/hosted/pub.flutter-io.cn/analyzer-0.34.1/lib/src/dart/ast/ast.dart');
-Uri srcUri = Uri.parse('/Users/leochou/.pub-cache/hosted/pub.flutter-io.cn/analyzer-0.34.1/lib/dart/ast/ast.dart');
+// Uri srcUri = Uri.parse('/Users/leochou/.pub-cache/hosted/pub.flutter-io.cn/args-1.5.1/lib/command_runner.dart');
+// Uri srcUri = Uri.parse('/Users/leochou/.pub-cache/hosted/pub.flutter-io.cn/kernel-0.3.7/lib/ast.dart');
+// Uri srcUri = Uri.parse('/Users/leochou/.pub-cache/hosted/pub.flutter-io.cn/analyzer-0.34.1/lib/dart/ast/ast.dart');
+Uri srcUri = Uri.parse('/Users/leochou/Github/dart-json2entity/sample/a.dart');
 main(List<String> args) {
   ClassGraph cg = new ClassGraph.fromUri(srcUri);
   cg.showJson();
