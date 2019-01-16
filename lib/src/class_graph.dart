@@ -72,9 +72,9 @@ class ClassGraph extends Graph {
     var src = _src ?? File.fromUri(_uri).readAsStringSync();
     CompilationUnit compilationUnit = parseCompilationUnit(src);
 
-    if (compilationUnit.declarations.length < 1) {
-      throw Exception('NO CLASS DECLARATION FOUND ERROR!');
-    }
+    // if (compilationUnit.declarations.length < 1) {
+    //   throw Exception('NO CLASS DECLARATION FOUND ERROR!');
+    // }
 
     // 读取源码中的类声明到列表
     _clsList = compilationUnit.declarations

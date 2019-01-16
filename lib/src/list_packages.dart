@@ -53,3 +53,27 @@ class MyEnvironmentProvider extends EnvironmentProvider {
     return jmap['packages'];
   }
 }
+
+abstract class Traversal<T> {
+  traverse(T entry);
+}
+
+class FileTraversal<String> extends Traversal{
+  @override
+  List<FileSystemEntity> traverse(entry) {
+    var dir = new Directory.fromUri(Uri.parse(entry));
+    List<FileSystemEntity> files = dir.listSync(recursive: true, followLinks: true);
+    return files;
+  }
+}
+
+class DartFileTraversal extends FileTraversal {
+  @override
+    traverse(entry) {
+      return super.traverse(entry).where((f)=>isDartFile(f.path)).toList();
+    }
+
+    bool isDartFile(String path) {
+      return path.endsWith('.dart');
+    }
+}
