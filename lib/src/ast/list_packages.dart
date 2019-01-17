@@ -77,3 +77,12 @@ class SingleFileProvider extends Traversal {
   }
 
 }
+
+class PackageImportResolver extends ImportResolver {
+  @override
+  resolve(input) {
+    // TODO: implement resolve
+    return null;
+  }
+
+}

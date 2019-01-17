@@ -1,9 +1,22 @@
-abstract class InputProvider {
-  provide();
-}
+import 'dart:io';
+
 
 abstract class Traversal<T> {
-  traverse(T entry);
+  List<FileSystemEntity> traverse(T entry);
+}
+
+class ParsedClassInfo {
+  var imported;
+  var importedWithBase;
+  var classes;
+  var classesWithImported;
+  ParsedClassInfo(Uri uri) {
+    if (!uri.pathSegments.last.endsWith('.dart')) {
+      throw new ArgumentError(
+            'The URI of the unit to patch must have the ".dart" suffix: $uri');
+    }
+    
+  }
 }
 
 abstract class ImportResolver {
@@ -82,12 +95,17 @@ class OneComposer extends Composer {
 
   @override
   void execute() {
-    var input = traversal.traverse('input');
-    var imports = importResolver.resolve(input);
+    List<FileSystemEntity> input = traversal.traverse('input');
+    var imports = importResolver.resolve(input.map((f)=>f));
     var classes = classScanner.scan(input);
     var rootNodes = nodeScanner.scan(classes);
     var pool = poolMaker.makePool(classes, imports);
     treeBuilder.build(classes, pool);
     var maps = mapConverter.convert(rootNodes);
   }
+}
+
+main(List<String> args) {
+  var uri = Uri.parse('/a/b/c/ddd.dart');
+  print(uri.pathSegments.last);
 }

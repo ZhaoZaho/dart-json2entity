@@ -3,8 +3,6 @@
 #### 1. original input
 - 目录
 - 文件
-InputProvider
-    provide();
 
 #### 2. dart file scan
 FileScanner
