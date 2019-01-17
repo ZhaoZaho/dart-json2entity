@@ -38,6 +38,8 @@ abstract class Graph {
   /// All classes declared
   List<EntityClassParser> get clsList => _clsList;
 
+  List<String> get clsNames => _clsList.map((c)=>c.getName()).toList();
+
   List<ClassNode> _rootNodes = <ClassNode>[];
 
   /// A list of nodes those have no explicit superclass
@@ -81,6 +83,15 @@ class ClassGraph extends Graph {
         .where((item) => item is ClassDeclaration)
         .map((cls) => EntityClassParser.fromClassDeclaration(cls))
         .toList();
+  }
+
+  getImportedClass() {
+    if(_clsList == null) {
+      return;
+    }
+    
+    var outerCls = _clsList.where((c)=>c.getSuper() != null)
+    .where((c)=> !clsNames.contains(c.getSuperName())).toList();
   }
 
   // find root nodes
@@ -133,6 +144,8 @@ class ClassGraph extends Graph {
 
     // find all root node. If a node who has no explicit super class
     _findRootNode();
+
+    getImportedClass();
 
     // 每个root node向下寻找直接子类，生成node树
     _generateNodeTree();
@@ -247,8 +260,8 @@ class TreeBuilderImpl extends TreeBuilder{
 // Uri srcUri = Uri.parse('/Users/leochou/.pub-cache/hosted/pub.flutter-io.cn/analyzer-0.34.1/lib/src/dart/ast/ast.dart');
 // Uri srcUri = Uri.parse('/Users/leochou/.pub-cache/hosted/pub.flutter-io.cn/args-1.5.1/lib/command_runner.dart');
 // Uri srcUri = Uri.parse('/Users/leochou/.pub-cache/hosted/pub.flutter-io.cn/kernel-0.3.7/lib/ast.dart');
-// Uri srcUri = Uri.parse('/Users/leochou/.pub-cache/hosted/pub.flutter-io.cn/analyzer-0.34.1/lib/dart/ast/ast.dart');
-Uri srcUri = Uri.parse('/Users/leochou/Github/dart-json2entity/sample/a.dart');
+Uri srcUri = Uri.parse('/Users/leochou/.pub-cache/hosted/pub.flutter-io.cn/analyzer-0.34.1/lib/dart/ast/ast.dart');
+// Uri srcUri = Uri.parse('/Users/leochou/Github/dart-json2entity/sample/a.dart');
 main(List<String> args) {
   ClassGraph cg = new ClassGraph.fromUri(srcUri);
   cg.showJson();

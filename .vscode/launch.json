@@ -8,7 +8,7 @@
         "name": "manager",
         "type": "dart",
         "request": "launch",
-        "program": "lib/src/manager.dart"
+        "program": "lib/src/ast//manager.dart"
     },
         {
             "name": "RESOLVER",
