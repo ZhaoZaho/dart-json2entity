@@ -1,4 +1,4 @@
-import 'package:json2entity/src/class_parser.dart';
+import 'package:json2entity/src/ast/class_parser.dart';
 
 main(List<String> args) {
   testGetConstructor();

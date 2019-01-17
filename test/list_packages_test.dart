@@ -1,7 +1,7 @@
 import 'dart:convert';
 
-import 'package:json2entity/src/list_packages.dart';
-import 'package:json2entity/src/resolver.dart';
+import 'package:json2entity/src/ast/list_packages.dart';
+import 'package:json2entity/src/ast/resolver.dart';
 import "package:test/test.dart";
 
 

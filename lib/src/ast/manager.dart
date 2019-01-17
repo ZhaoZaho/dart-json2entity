@@ -1,13 +1,13 @@
 import 'dart:convert';
 
-import 'package:json2entity/src/class_graph.dart';
-import 'package:json2entity/src/class_parser.dart';
-import 'package:json2entity/src/list_packages.dart';
+import 'package:json2entity/src/ast/class_graph.dart';
+import 'package:json2entity/src/ast/class_parser.dart';
+import 'package:json2entity/src/ast/list_packages.dart';
 
 List<ClassNode> _rootNodes = <ClassNode>[];
 List<Map<String, dynamic>> maps = [];
 main(List<String> args) {
-  var root = MyEnvironmentProvider().getPackagePath('analyzer');
+  var root = MyEnvironmentProvider().getPackagePath('http');
   print(root);
   var files = new DartFileTraversal().traverse('$root');
   print(files);
@@ -17,6 +17,7 @@ main(List<String> args) {
       .expand((u) => ClassGraph.fromUri(u).clsList)
       ?.toList();
   print(cls.length);
+  cls.map((f) => f.getName()).forEach((f) => print(f));
 
   _findRootNode(cls);
 
@@ -44,7 +45,7 @@ void _findRootNode(dynamic _clsList) {
     EntityClassParser cls = it.current;
     ClassNode node = ClassNode(cls);
     if (cls.getSuper() == null) {
-      print(cls.clazz.name.name);
+      // print(cls.clazz.name.name);
       _rootNodes.add(node);
     }
   }

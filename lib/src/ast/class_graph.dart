@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:analyzer/analyzer.dart';
-import 'package:json2entity/src/class_parser.dart';
+import 'package:json2entity/src/ast/class_parser.dart';
 
 /// A [ClassNode] represents a node in inheritance tree
 /// 将类的继承关系描绘成一棵多树，[ClassNode]则是树上的一个节点
@@ -97,7 +97,7 @@ class ClassGraph extends Graph {
       EntityClassParser cls = it.current;
       ClassNode node = ClassNode(cls);
       if (cls.getSuper() == null) {
-        print(cls.clazz.name.name);
+        // print(cls.clazz.name.name);
         _rootNodes.add(node);
       }
     }

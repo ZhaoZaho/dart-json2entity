@@ -9,7 +9,7 @@ import 'package:analyzer/file_system/physical_file_system.dart';
 import 'package:analyzer/src/generated/source.dart';
 import 'package:analyzer/src/source/source_resource.dart';
 import 'package:analyzer/file_system/physical_file_system.dart';
-import 'package:json2entity/src/list_packages.dart';
+import 'package:json2entity/src/ast/list_packages.dart';
 import 'package:path/path.dart';
 
 main() async {
