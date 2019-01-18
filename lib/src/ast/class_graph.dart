@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:analyzer/analyzer.dart';
 import 'package:json2entity/src/ast/class_parser.dart';
+import 'package:json2entity/src/ast/resolver.dart';
 
 /// A [ClassNode] represents a node in inheritance tree
 /// 将类的继承关系描绘成一棵多树，[ClassNode]则是树上的一个节点
@@ -56,6 +57,8 @@ abstract class Graph {
 
 /// 读取dart源码，将类的继承关系（extends）转化成map，通过工具，可视化展示
 class ClassGraph extends Graph {
+  CompilationUnit compilationUnit;
+
 
   ClassGraph.fromUri(Uri _uri): super(null, _uri) {
     _init();
@@ -72,7 +75,8 @@ class ClassGraph extends Graph {
     }
 
     var src = _src ?? File.fromUri(_uri).readAsStringSync();
-    CompilationUnit compilationUnit = parseCompilationUnit(src);
+    compilationUnit = parseCompilationUnit(src);
+    _src = src;
 
     // if (compilationUnit.declarations.length < 1) {
     //   throw Exception('NO CLASS DECLARATION FOUND ERROR!');
@@ -92,6 +96,8 @@ class ClassGraph extends Graph {
     
     var outerCls = _clsList.where((c)=>c.getSuper() != null)
     .where((c)=> !clsNames.contains(c.getSuperName())).toList();
+
+
   }
 
   // find root nodes
@@ -141,6 +147,14 @@ class ClassGraph extends Graph {
   void _init() {
     // find all class declared in file
     getClassList();
+
+    getImportDirective() {
+      if (compilationUnit == null) {
+        return;
+      }
+      var directives = compilationUnit.directives.where((d)=>d is ImportDirective).toList();
+      // directives.map((d)=>DartUriResolver().resolveAbsolute(d.));
+    }
 
     // find all root node. If a node who has no explicit super class
     _findRootNode();

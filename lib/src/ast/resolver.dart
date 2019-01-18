@@ -57,3 +57,21 @@ class PackageUriResolver extends UriResolver {
   }
 
 }
+
+class DartUriResolver extends UriResolver {
+  @override
+  Source resolveAbsolute(Uri uri, [Uri actualUri]) {
+    uri ??= actualUri;
+    if (uri.scheme != 'dart') {
+        throw new ArgumentError(
+            'The URI of the unit to patch must have the "dart" scheme: $uri');
+      }
+      List<String> uriSegments = uri.pathSegments;
+      String libraryName = uriSegments.first;
+      var dartHome = MyEnvironmentProvider().getDartHome();
+      var fullPath = '${dartHome}/lib/$libraryName';
+      var file = PhysicalResourceProvider.INSTANCE.getFile(fullPath);
+    return new FileSource(file);
+  }
+
+}
