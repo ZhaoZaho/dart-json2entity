@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:json2entity/src/ast/abs.dart';
 import 'package:json2entity/src/ast/class_graph.dart';
 import 'package:json2entity/src/ast/class_parser.dart';
 import 'package:json2entity/src/ast/list_packages.dart';
@@ -7,22 +8,27 @@ import 'package:json2entity/src/ast/list_packages.dart';
 List<ClassNode> _rootNodes = <ClassNode>[];
 List<Map<String, dynamic>> maps = [];
 main(List<String> args) {
-  var root = MyEnvironmentProvider().getPackagePath('http');
+  var root = MyEnvironmentProvider().getPackagePath('json2entity');
   print(root);
   var files = new DartFileTraversal().traverse('$root');
-  files = files.where((f)=>f.uri.path.contains('byte_stream.dart')).toList();
+//  files = files.where((f)=>f.uri.path.contains('byte_stream.dart')).toList();
   print(files);
 
-  var cls = files
-      .map((f) => f.uri)
-      .expand((u) => ClassGraph.fromUri(u).clsList)
-      ?.toList();
+  var cls;
+  try {
+    cls = files
+          .map((f) => f.uri)
+          .expand((u) => ParsedSourceImpl.fromUri(u).clsList)
+          ?.toList();
+  } catch (e) {
+    print(e);
+  }
 
   Iterable clsOuter;
   try {
     clsOuter = files
           .map((f) => f.uri)
-          .expand((u) => ClassGraph.fromUri(u).importedEntityClassParser)
+          .expand((u) => ParsedSourceImpl.fromUri(u).findImportedClass())
           ?.toList();
   } catch (e) {
     print(e);
@@ -31,8 +37,10 @@ main(List<String> args) {
   print(cls.length);
   cls.map((f) => f.getName()).forEach((f) => print(f));
 
-  _findRootNode(cls);
-  _rootNodes.addAll(clsOuter.map((e)=>ClassNode(e)));
+  _rootNodes.addAll(RootFinderImpl().findRoot(cls));
+  if (clsOuter != null) {
+    _rootNodes.addAll(clsOuter.map((e)=>ClassNode(e)));
+  }
 
   clsOuter ??= <EntityClassParser>[];
   (clsOuter as List).addAll(cls);
@@ -46,23 +54,4 @@ main(List<String> args) {
   }
   var jsons = maps.map((m) => jsonEncode(m)).toList();
   jsons.forEach((j) => print(j));
-}
-
-void _findRootNode(dynamic _clsList) {
-  if (_clsList == null) {
-    return;
-  }
-
-  Iterator<EntityClassParser> it = _clsList.iterator;
-
-  // find out all root node.
-  // 找到所有没有extends语句的类，把他们作为顶级类，加入到rootNodes
-  while (it.moveNext()) {
-    EntityClassParser cls = it.current;
-    ClassNode node = ClassNode(cls);
-    if (cls.getSuper() == null) {
-      // print(cls.clazz.name.name);
-      _rootNodes.add(node);
-    }
-  }
 }
