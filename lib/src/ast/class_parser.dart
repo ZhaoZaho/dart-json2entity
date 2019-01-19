@@ -1,15 +1,8 @@
 import 'dart:io';
 
 import 'package:analyzer/analyzer.dart';
+import 'package:json2entity/src/ast/abs.dart';
 
-
-abstract class ClassParser {
-  ConstructorDeclaration getConstructor();
-  getFields();
-  getMethods();
-  getSuper();
-  List<TypeName> getImplements();
-}
 
 class EntityClassParser extends ClassParser {
   ClassDeclaration _clazz;
@@ -51,13 +44,11 @@ class EntityClassParser extends ClassParser {
 
   @override
   getFields() {
-    // TODO: implement getFields
     return null;
   }
 
   @override
   getMethods() {
-    // TODO: implement getMethods
     return null;
   }
 

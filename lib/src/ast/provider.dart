@@ -1,16 +1,16 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:analyzer/analyzer.dart';
 import 'package:json2entity/src/ast/abs.dart';
+import 'package:json2entity/src/ast/class_graph.dart';
+import 'package:json2entity/src/ast/class_parser.dart';
 
 class MyEnvironmentProvider extends EnvironmentProvider {
   getDartHome() {
     ProcessResult result = Process.runSync('which', ['dart']);
     if (result.exitCode != 0) {
       print(result.stderr);
-      throw Exception(
-          '执行命令：which dart 发生错误，code: ${result.exitCode}');
+      throw Exception('执行命令：which dart 发生错误，code: ${result.exitCode}');
     }
     String dartPath = result.stdout.toString();
     String dartHome = dartPath.replaceAll('/bin/dart\n', '');
@@ -89,14 +89,58 @@ class SingleFileProvider extends Traversal {
   }
 }
 
-/// parse import directives from file
-class PackageImportResolver extends ImportResolver {
+class RootFinderImpl extends RootFinder {
+  List<ClassNode> _rootNodes = <ClassNode>[];
+
   @override
-  resolve(input) {
-    var src = File.fromUri(input);
-    var compilationUnit = parseCompilationUnit(src.readAsStringSync());
-    var imports = compilationUnit.directives.where((d)=>d is ImportDirective).toList();
-    return imports;
+  findRoot(dynamic _clsList) {
+    if (_clsList == null) {
+      return null;
+    }
+
+    Iterator<EntityClassParser> it = _clsList.iterator;
+
+    // find out all root node.
+    // 找到所有没有extends语句的类，把他们作为顶级类，加入到rootNodes
+    while (it.moveNext()) {
+      EntityClassParser cls = it.current;
+      ClassNode node = ClassNode(cls);
+      if (cls.getSuper() == null) {
+        // print(cls.clazz.name.name);
+        _rootNodes.add(node);
+      }
+    }
+    return _rootNodes;
+  }
+}
+
+class SingleFileScanner extends ClassScanner<EntityClassParser> {
+  @override
+  List<EntityClassParser> scan(Iterable<Uri> files, [String forName]) {
+    Uri uri = files.single;
+    if (forName == null) {
+      return ParsedSourceImpl.fromUri(uri).clsList;
+    } else {
+      return ParsedSourceImpl.fromUri(uri)
+          .clsList
+          .where((c) => c.getName() == forName)
+          .toList();
+    }
+  }
+}
+
+class FileScanner extends ClassScanner<EntityClassParser> {
+  @override
+  Iterable<EntityClassParser> scan(Iterable<Uri> files, [String forName]) {
+    if (forName == null) {
+      return files?.expand((f) => ParsedSourceImpl.fromUri(f).clsList);
+    } else {
+      return files
+          ?.expand((f) => ParsedSourceImpl.fromUri(f)
+              .clsList
+              .where((c) => c.getName() == forName))
+          .toList();
+    }
   }
 }
 

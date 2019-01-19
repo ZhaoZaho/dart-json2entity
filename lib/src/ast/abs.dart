@@ -1,9 +1,9 @@
 import 'dart:io';
 
+import 'package:analyzer/dart/ast/ast.dart';
 import 'package:json2entity/src/ast/class_graph.dart';
 import 'package:json2entity/src/ast/class_parser.dart';
-import 'package:json2entity/src/ast/list_packages.dart';
-
+import 'package:json2entity/src/ast/provider.dart';
 
 abstract class Traversal<T> {
   List<FileSystemEntity> traverse(T entry);
@@ -25,18 +25,13 @@ abstract class PoolMaker {
   makePool(src, added);
 }
 
-abstract class TreeBuilder {
-  build(root, pool);
-}
-
-abstract class MapConverter {
-  convert(roots);
-}
-
 abstract class EnvironmentProvider {
   getProjectRoot();
+
   getPackages();
+
   getPackageList();
+
   getPackagePath(String name);
 }
 
@@ -44,31 +39,25 @@ abstract class RootFinder {
   Iterable findRoot(Iterable clsList);
 }
 
-class RootFinderImpl extends RootFinder {
+abstract class ClassParser {
+  ConstructorDeclaration getConstructor();
 
-  List<ClassNode> _rootNodes = <ClassNode>[];
-  @override
-  findRoot(dynamic _clsList) {
-    if (_clsList == null) {
-      return null;
-    }
+  getFields();
 
-    Iterator<EntityClassParser> it = _clsList.iterator;
+  getMethods();
 
-    // find out all root node.
-    // 找到所有没有extends语句的类，把他们作为顶级类，加入到rootNodes
-    while (it.moveNext()) {
-      EntityClassParser cls = it.current;
-      ClassNode node = ClassNode(cls);
-      if (cls.getSuper() == null) {
-        // print(cls.clazz.name.name);
-        _rootNodes.add(node);
-      }
-    }
-    return _rootNodes;
-  }
+  getSuper();
+
+  List<TypeName> getImplements();
 }
 
+abstract class MapConverter {
+  Map<String, dynamic> convert(ClassNode rootNode);
+}
+
+abstract class TreeBuilder {
+  void buildTree(ClassNode root, List<EntityClassParser> clsList);
+}
 
 abstract class Composer {
   PoolMaker poolMaker;
@@ -116,35 +105,12 @@ class OneComposer extends Composer {
   @override
   void execute() {
     List<FileSystemEntity> input = traversal.traverse('input');
-    var imports = importResolver.resolve(input.map((f)=>f));
-    var classes = classScanner.scan(input.map((f)=>f.uri));
+    var imports = importResolver.resolve(input.map((f) => f));
+    var classes = classScanner.scan(input.map((f) => f.uri));
     var rootNodes = nodeScanner.scan(classes);
     var pool = poolMaker.makePool(classes, imports);
-    treeBuilder.build(classes, pool);
+//    treeBuilder.buildTree(classes, pool);
     var maps = mapConverter.convert(rootNodes);
-  }
-}
-
-class SingleFileScanner extends ClassScanner<EntityClassParser> {
-  @override
-  List<EntityClassParser> scan(Iterable<Uri> files, [String forName]) {
-    Uri uri = files.single;
-    if (forName == null) {
-      return ParsedSourceImpl.fromUri(uri).clsList;
-    } else {
-      return ParsedSourceImpl.fromUri(uri).clsList.where((c)=>c.getName() == forName).toList();
-    }
-  }
-}
-
-class FileScanner extends ClassScanner<EntityClassParser> {
-  @override
-  Iterable<EntityClassParser> scan(Iterable<Uri> files, [String forName]) {
-    if (forName == null) {
-      return files?.expand((f)=>ParsedSourceImpl.fromUri(f).clsList);
-    } else {
-      return files?.expand((f)=>ParsedSourceImpl.fromUri(f).clsList.where((c)=>c.getName() == forName)).toList();
-    }
   }
 }
 
@@ -152,7 +118,9 @@ main(List<String> args) {
   var uri = Uri.parse('/a/b/c/ddd.dart');
   print(uri.pathSegments.last);
 
-  var traverse = DartFileTraversal().traverse('/Users/etiantian/flutter/flutter-0.10.0/bin/cache/dart-sdk/lib/async');
-  var list = FileScanner().scan(traverse.map((f)=>f.uri).toList(), 'BaseRequest');
+  var traverse = DartFileTraversal().traverse(
+      '/Users/etiantian/flutter/flutter-0.10.0/bin/cache/dart-sdk/lib/async');
+  var list =
+      FileScanner().scan(traverse.map((f) => f.uri).toList(), 'BaseRequest');
   print(list.length);
 }

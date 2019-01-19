@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:analyzer/analyzer.dart';
 import 'package:json2entity/src/ast/abs.dart';
 import 'package:json2entity/src/ast/class_parser.dart';
-import 'package:json2entity/src/ast/list_packages.dart';
+import 'package:json2entity/src/ast/provider.dart';
 import 'package:json2entity/src/ast/resolver.dart';
 import 'package:path/path.dart';
 
@@ -20,7 +20,6 @@ class ClassNode {
     }
   }
 }
-
 
 abstract class ParsedSource {
   ParsedSource(this._src, [this._uri]);
@@ -54,7 +53,6 @@ abstract class ParsedSource {
 
 /// 读取dart源码，将类的继承关系（extends）转化成map，通过工具，可视化展示
 class ParsedSourceImpl extends ParsedSource {
-
   ParsedSourceImpl.fromUri(Uri _uri) : super(null, _uri) {
     _init();
   }
@@ -125,7 +123,6 @@ class ParsedSourceImpl extends ParsedSource {
       return outerSuper;
     }
     for (var i in imports) {
-
       var iterator = classesHaveOuterSuper.iterator;
       while (classesHaveOuterSuper.length > 0 && iterator.moveNext()) {
         var c = iterator.current;
@@ -153,14 +150,6 @@ class ParsedSourceImpl extends ParsedSource {
     }
     return outerSuper;
   }
-}
-
-abstract class MapConverter {
-  Map<String, dynamic> convert(ClassNode rootNode);
-}
-
-abstract class TreeBuilder {
-  void buildTree(ClassNode root, List<EntityClassParser> clsList);
 }
 
 class TreeToMapConverter implements MapConverter {

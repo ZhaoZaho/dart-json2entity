@@ -1,14 +1,15 @@
 import 'dart:convert';
 
-import 'package:json2entity/src/ast/abs.dart';
 import 'package:json2entity/src/ast/class_graph.dart';
 import 'package:json2entity/src/ast/class_parser.dart';
-import 'package:json2entity/src/ast/list_packages.dart';
+import 'package:json2entity/src/ast/provider.dart';
 
 List<ClassNode> _rootNodes = <ClassNode>[];
 List<Map<String, dynamic>> maps = [];
+
 main(List<String> args) {
-  var root = MyEnvironmentProvider().getPackagePath('json2entity');
+//  var root = MyEnvironmentProvider().getPackagePath('analyzer');
+  var root = '/Users/etiantian/flutter/flutter-0.10.0/packages/flutter/lib/';
   print(root);
   var files = new DartFileTraversal().traverse('$root');
 //  files = files.where((f)=>f.uri.path.contains('byte_stream.dart')).toList();
@@ -17,9 +18,9 @@ main(List<String> args) {
   var cls;
   try {
     cls = files
-          .map((f) => f.uri)
-          .expand((u) => ParsedSourceImpl.fromUri(u).clsList)
-          ?.toList();
+        .map((f) => f.uri)
+        .expand((u) => ParsedSourceImpl.fromUri(u).clsList)
+        ?.toList();
   } catch (e) {
     print(e);
   }
@@ -27,9 +28,9 @@ main(List<String> args) {
   Iterable clsOuter;
   try {
     clsOuter = files
-          .map((f) => f.uri)
-          .expand((u) => ParsedSourceImpl.fromUri(u).findImportedClass())
-          ?.toList();
+        .map((f) => f.uri)
+        .expand((u) => ParsedSourceImpl.fromUri(u).findImportedClass())
+        ?.toList();
   } catch (e) {
     print(e);
   }
@@ -39,7 +40,7 @@ main(List<String> args) {
 
   _rootNodes.addAll(RootFinderImpl().findRoot(cls));
   if (clsOuter != null) {
-    _rootNodes.addAll(clsOuter.map((e)=>ClassNode(e)));
+    _rootNodes.addAll(clsOuter.map((e) => ClassNode(e)));
   }
 
   clsOuter ??= <EntityClassParser>[];
@@ -52,6 +53,12 @@ main(List<String> args) {
     var map = TreeToMapConverter().convert(node);
     maps.add(map);
   }
-  var jsons = maps.map((m) => jsonEncode(m)).toList();
-  jsons.forEach((j) => print(j));
+  // 关键字模糊过滤
+//  var jsons = maps.map((m) => jsonEncode(m)).toList();
+//  jsons.forEach((j) => print(j));
+//  jsons.where((e)=>e.contains('Widget')).forEach((j)=>print(j));
+
+  /// 根节点过滤
+  maps.where((m)=>m.containsKey('Diagnosticable')).map((e)=>jsonEncode(e)).forEach((j)=>print(j));
+
 }
