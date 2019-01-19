@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:json2entity/src/ast/class_graph.dart';
+import 'package:json2entity/src/ast/class_parser.dart';
 
 
 abstract class Traversal<T> {
@@ -26,7 +27,7 @@ abstract class ImportResolver {
 }
 
 abstract class ClassScanner<T> {
-  List<T> scan(List<Uri> files);
+  Iterable<T> scan(Iterable<Uri> files);
 }
 
 abstract class NodeScanner {
@@ -107,9 +108,9 @@ class OneComposer extends Composer {
   }
 }
 
-class SingleFileScanner extends ClassScanner {
+class SingleFileScanner extends ClassScanner<EntityClassParser> {
   @override
-  scan(List<Uri> files, [String forName]) {
+  List<EntityClassParser> scan(Iterable<Uri> files, [String forName]) {
     Uri uri = files.single;
     if (forName == null) {
       return ClassGraph.fromUri(uri).clsList;
@@ -117,7 +118,17 @@ class SingleFileScanner extends ClassScanner {
       return ClassGraph.fromUri(uri).clsList.where((c)=>c.getName() == forName).toList();
     }
   }
+}
 
+class FileScanner extends ClassScanner<EntityClassParser> {
+  @override
+  Iterable<EntityClassParser> scan(Iterable<Uri> files, [String forName]) {
+    if (forName == null) {
+      return files?.expand((f)=>ClassGraph.fromUri(f).clsList);
+    } else {
+      return files?.expand((f)=>ClassGraph.fromUri(f).clsList.where((c)=>c.getName() == forName));
+    }
+  }
 }
 
 main(List<String> args) {

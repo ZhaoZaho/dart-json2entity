@@ -5,6 +5,12 @@
     "version": "0.2.0",
     "configurations": [
     {
+        "name": "graph",
+        "type": "dart",
+        "request": "launch",
+        "program": "lib/src/ast/class_graph.dart"
+    },
+    {
         "name": "manager",
         "type": "dart",
         "request": "launch",

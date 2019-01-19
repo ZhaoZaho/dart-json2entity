@@ -2,8 +2,11 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:analyzer/analyzer.dart';
+import 'package:json2entity/src/ast/abs.dart';
 import 'package:json2entity/src/ast/class_parser.dart';
+import 'package:json2entity/src/ast/list_packages.dart';
 import 'package:json2entity/src/ast/resolver.dart';
+import 'package:path/path.dart';
 
 /// A [ClassNode] represents a node in inheritance tree
 /// 将类的继承关系描绘成一棵多树，[ClassNode]则是树上的一个节点
@@ -19,9 +22,7 @@ class ClassNode {
   }
 }
 
-
 abstract class Graph {
-
   Graph(this._src, [this._uri]);
 
   Uri _uri;
@@ -35,32 +36,37 @@ abstract class Graph {
   String get src => _src;
 
   List<EntityClassParser> _clsList;
-  
+
+  List<ImportDirective> imports;
+
   /// All classes declared
   List<EntityClassParser> get clsList => _clsList;
 
-  List<String> get clsNames => _clsList.map((c)=>c.getName()).toList();
+  List<String> get clsNames => _clsList.map((c) => c.getName()).toList();
 
   List<ClassNode> _rootNodes = <ClassNode>[];
 
   /// A list of nodes those have no explicit superclass
   List<ClassNode> get rootNodes => _rootNodes;
-  
+
   List<Map<String, dynamic>> _maps;
 
   /// result maps
-  List<Map<String, dynamic>>  get maps => _maps;
+  List<Map<String, dynamic>> get maps => _maps;
 
   /// result JSONs
-   List<String> get jsons => _maps.map((m)=>jsonEncode(m)).toList();
+  List<String> get jsons => _maps.map((m) => jsonEncode(m)).toList();
 }
 
 /// 读取dart源码，将类的继承关系（extends）转化成map，通过工具，可视化展示
 class ClassGraph extends Graph {
   CompilationUnit compilationUnit;
 
+  List<EntityClassParser> outerCls;
 
-  ClassGraph.fromUri(Uri _uri): super(null, _uri) {
+  List<EntityClassParser> importedEntityClassParser;
+
+  ClassGraph.fromUri(Uri _uri) : super(null, _uri) {
     _init();
   }
 
@@ -90,14 +96,14 @@ class ClassGraph extends Graph {
   }
 
   getImportedClass() {
-    if(_clsList == null) {
+    if (_clsList == null) {
       return;
     }
-    
-    var outerCls = _clsList.where((c)=>c.getSuper() != null)
-    .where((c)=> !clsNames.contains(c.getSuperName())).toList();
 
-
+    outerCls = _clsList
+        .where((c) => c.getSuper() != null)
+        .where((c) => !clsNames.contains(c.getSuperName()))
+        .toList();
   }
 
   // find root nodes
@@ -144,22 +150,28 @@ class ClassGraph extends Graph {
     });
   }
 
+  getImportDirective() {
+    if (compilationUnit == null) {
+      return;
+    }
+    List<ImportDirective> directives = compilationUnit.directives
+        .where((d) => d is ImportDirective)
+        .map((f) => f as ImportDirective)
+        .toList();
+//    print(directives.last.uri.stringValue);
+    imports = directives;
+  }
+
   void _init() {
     // find all class declared in file
     getClassList();
 
-    getImportDirective() {
-      if (compilationUnit == null) {
-        return;
-      }
-      var directives = compilationUnit.directives.where((d)=>d is ImportDirective).toList();
-      // directives.map((d)=>DartUriResolver().resolveAbsolute(d.));
-    }
+    getImportDirective();
+    getImportedClass();
+    getImportedClassReal();
 
     // find all root node. If a node who has no explicit super class
     _findRootNode();
-
-    getImportedClass();
 
     // 每个root node向下寻找直接子类，生成node树
     _generateNodeTree();
@@ -168,8 +180,44 @@ class ClassGraph extends Graph {
     // key是父类的名字，value是子类们的名字组成的map
     // 没有子类的类，也就是树上的叶子节点，在json 上对应的value是""{}"
     _maps = _convertTreeToMap();
+  }
+
+  void getImportedClassReal() {
+    if (outerCls == null) {
+      return;
+    }
+    if (imports == null || imports.isEmpty) {
+      return;
+    }
+    importedEntityClassParser = [];
+    for (var i in imports) {
+      while (outerCls.length > 0) {
+        var c = outerCls.first;
+        var uri = Uri.parse(i.uri.stringValue);
+        Uri resolvedUri;
+        if (uri.isScheme('package')) {
+          resolvedUri = PackageUriResolver().resolveAbsolute(uri).uri;
+        } else if (uri.isScheme('dart')) {
+          resolvedUri = DartUriResolver().resolveAbsolute(uri).uri;
+        }
+        var found = SingleFileScanner()
+            .scan([resolvedUri ?? uri], c.getSuperName());
+        if (found == null || found.isEmpty) {
+          var parent = dirname(resolvedUri.path);
+          var traverse = DartFileTraversal().traverse(parent);
+          found = FileScanner().scan(traverse.map((f)=>f.uri).toList(), c.getSuperName()).toList();
+        }
+        if (found != null && !found.isEmpty) {
+          importedEntityClassParser.addAll(found);
+          outerCls.remove(c);
+
+        }
+      }
+    }
 
   }
+
+
 }
 
 abstract class MapConverter {
@@ -177,12 +225,10 @@ abstract class MapConverter {
 }
 
 class TreeToMapConverter implements MapConverter {
-
   get emptyMap => <String, dynamic>{};
 
   @override
   Map<String, dynamic> convert(ClassNode root) {
-
     if (root == null) {
       return null;
     }
@@ -208,7 +254,6 @@ class TreeToMapConverter implements MapConverter {
     return rootMap;
   }
 
-
   /// rootMap 对应一个tree，
   /// 这个方法的功能是根据子节点，找到节点在rootMap中的位置。
   _getCurrMap(ClassNode node, Map<String, dynamic> rootMap) {
@@ -229,15 +274,13 @@ class TreeToMapConverter implements MapConverter {
   }
 }
 
-
-abstract class TreeBuilder{
+abstract class TreeBuilder {
   void buildTree(ClassNode root, List<EntityClassParser> clsList);
 }
 
-class TreeBuilderImpl extends TreeBuilder{
+class TreeBuilderImpl extends TreeBuilder {
   @override
   void buildTree(ClassNode node, List<EntityClassParser> clsList) {
-    
     Iterable<EntityClassParser> children;
     List<ClassNode> pending = [node];
     while (pending.length > 0) {
@@ -259,7 +302,8 @@ class TreeBuilderImpl extends TreeBuilder{
   }
 
   /// 从[ClassDeclaration]列表中，找到直接父类是superName的，并返回
-  Iterable<EntityClassParser> _findChildren(String superName, List<EntityClassParser> _clsList) {
+  Iterable<EntityClassParser> _findChildren(
+      String superName, List<EntityClassParser> _clsList) {
     if (_clsList == null || _clsList.isEmpty || superName == null) {
       return null;
     }
@@ -270,14 +314,14 @@ class TreeBuilderImpl extends TreeBuilder{
   }
 }
 
-
 // Uri srcUri = Uri.parse('/Users/leochou/.pub-cache/hosted/pub.flutter-io.cn/analyzer-0.34.1/lib/src/dart/ast/ast.dart');
 // Uri srcUri = Uri.parse('/Users/leochou/.pub-cache/hosted/pub.flutter-io.cn/args-1.5.1/lib/command_runner.dart');
 // Uri srcUri = Uri.parse('/Users/leochou/.pub-cache/hosted/pub.flutter-io.cn/kernel-0.3.7/lib/ast.dart');
-Uri srcUri = Uri.parse('/Users/leochou/.pub-cache/hosted/pub.flutter-io.cn/analyzer-0.34.1/lib/dart/ast/ast.dart');
+//Uri srcUri = Uri.parse('/Users/etiantian/.pub-cache/hosted/pub.flutter-io.cn/analyzer-0.34.1/lib/dart/ast/ast.dart');
 // Uri srcUri = Uri.parse('/Users/leochou/Github/dart-json2entity/sample/a.dart');
+Uri srcUri = Uri.parse('/Users/etiantian/Github/dart-json2entity/lib/src/clazz.dart');
 main(List<String> args) {
   ClassGraph cg = new ClassGraph.fromUri(srcUri);
   cg.showJson();
-  cg.jsons.forEach((j)=>print(j));
+  cg.jsons.forEach((j) => print(j));
 }

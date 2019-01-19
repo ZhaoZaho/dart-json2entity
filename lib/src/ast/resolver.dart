@@ -68,8 +68,8 @@ class DartUriResolver extends UriResolver {
       }
       List<String> uriSegments = uri.pathSegments;
       String libraryName = uriSegments.first;
-      var dartHome = MyEnvironmentProvider().getDartHome();
-      var fullPath = '${dartHome}/lib/$libraryName';
+      Uri dartHome = MyEnvironmentProvider().getDartHome();
+      var fullPath = '${dartHome}/lib/$libraryName/$libraryName.dart';
       var file = PhysicalResourceProvider.INSTANCE.getFile(fullPath);
     return new FileSource(file);
   }

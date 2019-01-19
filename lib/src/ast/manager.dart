@@ -10,19 +10,35 @@ main(List<String> args) {
   var root = MyEnvironmentProvider().getPackagePath('http');
   print(root);
   var files = new DartFileTraversal().traverse('$root');
+  files = files.where((f)=>f.uri.path.contains('byte_stream.dart')).toList();
   print(files);
 
   var cls = files
       .map((f) => f.uri)
       .expand((u) => ClassGraph.fromUri(u).clsList)
       ?.toList();
+
+  Iterable clsOuter;
+  try {
+    clsOuter = files
+          .map((f) => f.uri)
+          .expand((u) => ClassGraph.fromUri(u).importedEntityClassParser)
+          ?.toList();
+  } catch (e) {
+    print(e);
+  }
+
   print(cls.length);
   cls.map((f) => f.getName()).forEach((f) => print(f));
 
   _findRootNode(cls);
+  _rootNodes.addAll(clsOuter.map((e)=>ClassNode(e)));
+
+  clsOuter ??= <EntityClassParser>[];
+  (clsOuter as List).addAll(cls);
 
   for (var node in _rootNodes) {
-    TreeBuilderImpl().buildTree(node, cls);
+    TreeBuilderImpl().buildTree(node, clsOuter);
   }
   for (var node in _rootNodes) {
     var map = TreeToMapConverter().convert(node);

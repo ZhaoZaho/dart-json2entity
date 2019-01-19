@@ -12,7 +12,9 @@ class MyEnvironmentProvider extends EnvironmentProvider {
       throw Exception(
           '执行命令：which dart 发生错误，code: ${result.exitCode}');
     }
-    return Uri.parse(result.stdout.toString().replaceFirst('/bin/dart', '/lib'));
+    String dartPath = result.stdout.toString();
+    String dartHome = dartPath.replaceAll('/bin/dart\n', '');
+    return Uri.parse(dartHome);
   }
 
   @deprecated
