@@ -154,7 +154,7 @@ class Clazz {
     if (hasValue(fields)) {
       String pre = '${_INDENT}$_name({';
       var pairs = fields.entries.toList().map((kv) {
-        return '${INDENT2}this.${kv.key}';
+        return '${INDENT2}this.${camelize(kv.key)}';
       }).join(',\n');
       String suffix = '${_INDENT}})';
       var superConstructor = buildSuperConstructor();
@@ -174,24 +174,24 @@ class Clazz {
       // 基础类型
       Iterable<String> simpleField = fields.entries
           .where((f) => _isSimple(f.value))
-          .map((kv) => '${INDENT2}${kv.key}=json[\'${kv.key}\']');
+          .map((kv) => '${INDENT2}${camelize(kv.key)}=json[\'${kv.key}\']');
 
       // 对象类型需要调用自己类的fromJson，完成自身的序列化
       Iterable<String> objectField =
           fields.entries.where((f) => _isObject(f.value)).map((kv) {
-        return '${INDENT2}${kv.key}=${kv.value}.fromJson(json[\'${kv.key}\'])';
+        return '${INDENT2}${camelize(kv.key)}=${kv.value}.fromJson(json[\'${kv.key}\'])';
       });
 
       // 简单列表类型需要调用自己类的fromJson，完成自身的序列化
       Iterable<String> simpleListField =
           fields.entries.where((f) => _isSimpleList(f.value)).map((kv) {
-        return '${INDENT2}${kv.key}=${kv.value}.from(json[\'${kv.key}\'])';
+        return '${INDENT2}${camelize(kv.key)}=${kv.value}.from(json[\'${kv.key}\'])';
       });
 
       // 对象列表类型需要调用自己类的fromJson，完成自身的序列化
       Iterable<String> objectListField =
           fields.entries.where((f) => _isObjectList(f.value)).map((kv) {
-        return "${INDENT2}${kv.key}=(json['${kv.key}'] as List)?.map((l)=>${_getItemType(kv.value)}.fromJson(l))?.toList()";
+        return "${INDENT2}${camelize(kv.key)}=(json['${kv.key}'] as List)?.map((l)=>${_getItemType(kv.value)}.fromJson(l))?.toList()";
       });
 
       pairs = simpleField
@@ -210,7 +210,7 @@ class Clazz {
     var pre = 'super(';
     frags.add(pre);
     if (hasValue(fields)) {
-      var pairs = fields.entries.map((kv) => kv.key).join(',');
+      var pairs = fields.entries.map((kv) => camelize(kv.key)).join(',');
       frags.join(pairs);
     }
     var post = ')';
@@ -225,20 +225,20 @@ class Clazz {
     if (hasValue(fields)) {
       Iterable<String> simpleField = fields.entries
           .where((f) => _isSimple(f.value))
-          .map((kv) => '${INDENT2}\'${kv.key}\':${kv.key}');
+          .map((kv) => '${INDENT2}\'${kv.key}\':${camelize(kv.key)}');
 
       Iterable<String> objectField = fields.entries
           .where((f) => _isObject(f.value))
-          .map((kv) => '${INDENT2}\'${kv.key}\':${kv.key}?.toJson()');
+          .map((kv) => '${INDENT2}\'${kv.key}\':${camelize(kv.key)}?.toJson()');
 
       Iterable<String> simpleListField = fields.entries
           .where((f) => _isSimpleList(f.value))
-          .map((kv) => '${INDENT2}\'${kv.key}\':${kv.key}');
+          .map((kv) => '${INDENT2}\'${kv.key}\':${camelize(kv.key)}');
 
       Iterable<String> objectListField = fields.entries
           .where((f) => _isObjectList(f.value))
           .map((kv) =>
-              "${INDENT2}\'${kv.key}':${kv.key}?.map((it)=>it.toJson())?.toList()");
+              "${INDENT2}\'${kv.key}':${camelize(kv.key)}?.map((it)=>it.toJson())?.toList()");
 
       var pairs = simpleField
           .followedBy(objectField)
@@ -272,9 +272,8 @@ class Clazz {
     classFrags.add(classDeclare);
     // 3. fields declare
     if (hasValue(fields)) {
-      var fieldPairs = fields.entries.toList().map((kv) {
-        return '${_INDENT}${kv.value} ${kv.key}';
-      }).join(';\n');
+      var fieldPairs =
+          fields.entries.toList().map(buildFieldDeclaration).join(';\n');
       classFrags.add('$fieldPairs;');
     }
     // 4. constructor
@@ -300,6 +299,13 @@ class Clazz {
 
     // 9. success
     return classes.join('\n\n');
+  }
+
+  String buildFieldDeclaration(kv) {
+    if (notCamel(kv.key)) {
+      return '@JsonKey(name:"${kv.key}")\n${kv.value} ${camelize(kv.key)}';
+    }
+    return '${_INDENT}${kv.value} ${kv.key}';
   }
 }
 

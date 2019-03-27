@@ -27,11 +27,15 @@ class Director {
     if (support_json_serializable) {
       _clazz = JsonSerializableClazz.fromJson(json, key: name);
       var part = buildPartName();
+      _clazz
+          .addHeader("import 'package:json_annotation/json_annotation.dart';");
       _clazz.addHeader(
           'import \'package:json_annotation/json_annotation.dart\';');
       _clazz.addHeader('part \'$part\';\n');
     } else {
       _clazz = Clazz.fromJson(json, key: name);
+      _clazz
+          .addHeader("import 'package:json_annotation/json_annotation.dart';");
     }
     _output = _clazz.toString();
   }
