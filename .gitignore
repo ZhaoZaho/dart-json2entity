@@ -1,2 +1,5 @@
 .packages
 .dart_tool
+example/output/
+.history
+.idea

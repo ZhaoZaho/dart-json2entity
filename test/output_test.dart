@@ -54,7 +54,7 @@ void testEntityConvertedByCli() {
 
   var j6 = Json6.fromJson(jsonDecode(json6));
   assertTrue(j6.data.length == 8, tag: 'data.length is ${j6.data.length}');
-  assertTrue(j6.data[0].image_list.length == 3);
+  assertTrue(j6.data[0].imageList.length == 3);
 }
 
 void testEntityConvertedSupportJsonSerializable() {
@@ -80,7 +80,7 @@ void testEntityConvertedSupportJsonSerializable() {
 
   var j6 = JsonS6.fromJson(jsonDecode(json6));
   assertTrue(j6.data.length == 8, tag: 'data.length is ${j6.data.length}');
-  assertTrue(j6.data[0].image_list.length == 3);
+  assertTrue(j6.data[0].imageList.length == 3);
 }
 
 void testEntityConvertedFromFile() {
@@ -106,7 +106,7 @@ void testEntityConvertedFromFile() {
 
   var j6 = JsonF6.fromJson(jsonDecode(json6));
   assertTrue(j6.data.length == 8, tag: 'data.length is ${j6.data.length}');
-  assertTrue(j6.data[0].image_list.length == 3);
+  assertTrue(j6.data[0].imageList.length == 3);
 }
 
 void assertTrue(bool b, {String tag}) {

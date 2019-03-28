@@ -29,13 +29,17 @@ class Director {
       var part = buildPartName();
       _clazz
           .addHeader("import 'package:json_annotation/json_annotation.dart';");
-      _clazz.addHeader(
-          'import \'package:json_annotation/json_annotation.dart\';');
       _clazz.addHeader('part \'$part\';\n');
     } else {
       _clazz = Clazz.fromJson(json, key: name);
-      _clazz
-          .addHeader("import 'package:json_annotation/json_annotation.dart';");
+      var any = RegExp('"([a-zA-Z0-9_-]+)"')
+          .allMatches(json)
+          .map((m) => m.group(0))
+          .any((s) => notCamel(s));
+      if (any) {
+        _clazz.addHeader(
+            "import 'package:json_annotation/json_annotation.dart';");
+      }
     }
     _output = _clazz.toString();
   }
