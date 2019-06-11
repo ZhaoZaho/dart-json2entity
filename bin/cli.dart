@@ -36,6 +36,11 @@ void run(List<String> args) {
     var name = p.basename(output);
     var outPath = p.dirname(output);
     if (jsonStr != null) {
+      if (name != null && name.length > 1) {
+        name = name.substring(0,1).toUpperCase() + name.substring(1);
+      } else {
+        name = "Model";
+      }
       doConvert(name, jsonStr, outPath, verbose, supportJsonSerializable);
     } else {
       converFromFile(jsonsFile, output, show_verbose: verbose);
